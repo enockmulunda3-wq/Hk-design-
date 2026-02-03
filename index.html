@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HK DESIGN - Application Officielle</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    
+    <style>
+        :root { --primary: #1a2a6c; --gold: #d4af37; --success: #27ae60; --error: #e74c3c; --whatsapp: #25D366; }
+        body { font-family: 'Segoe UI', sans-serif; background: #121212; color: #fff; display: flex; justify-content: center; padding: 10px; margin: 0; }
+        
+        .container { 
+            width: 100%; max-width: 400px; background: #fff; color: #333; border-radius: 20px; 
+            padding: 20px; min-height: 600px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            overflow-y: auto; position: relative;
+        }
+
+        .corner-logo {
+            position: absolute; top: 15px; right: 15px; width: 55px; height: 55px;
+            border-radius: 50%; border: 2px solid var(--gold);
+            background: url('https://i.postimg.cc/Gpkb9PsP/20260203-104239.png') no-repeat center center;
+            background-size: cover; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .back-btn {
+            position: absolute; top: 15px; left: 15px; background: #f0f0f0; border: none;
+            color: var(--primary); font-size: 1.2rem; cursor: pointer; font-weight: bold;
+            width: 35px; height: 35px; border-radius: 50%; display: none; align-items: center;
+            justify-content: center; z-index: 10;
+        }
+
+        /* NOUVEAU: STYLE MENU PROFIL */
+        .profile-trigger {
+            position: absolute; top: 15px; left: 60px; display: none;
+            flex-direction: column; gap: 4px; cursor: pointer; z-index: 10; padding: 5px;
+        }
+        .profile-trigger div { width: 25px; height: 3px; background: var(--primary); border-radius: 2px; }
+
+        .side-menu {
+            position: fixed; top: 0; left: -100%; width: 80%; max-width: 300px; height: 100%;
+            background: white; z-index: 2000; transition: 0.3s; box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+            padding: 20px; color: #333;
+        }
+        .side-menu.open { left: 0; }
+        .overlay-menu {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; z-index: 1999;
+        }
+        .edit-badge {
+            position: absolute; bottom: 0; right: 0; background: var(--gold);
+            color: white; width: 28px; height: 28px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white;
+        }
+
+        .screen { display: none; animation: fadeIn 0.5s; padding-top: 40px; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        h2 { text-align: center; color: var(--primary); border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-top: 20px;}
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .msg { font-size: 0.85rem; margin-top: 5px; font-weight: 600; text-align: center; }
+        .red { color: var(--error); }
+        .green-band { background: var(--success); color: white; padding: 10px; border-radius: 5px; margin-top: 10px; text-align: center; }
+        
+        /* Portfolio */
+        .portfolio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; padding-bottom: 20px; }
+        .portfolio-item-box { border: 1px solid #eee; border-radius: 10px; padding: 8px; background: #fafafa; text-align: center; display: flex; flex-direction: column; gap: 5px; }
+        .portfolio-img { width: 100%; height: 160px; object-fit: cover; border-radius: 5px; cursor: zoom-in; }
+        .action-btns { display: flex; flex-direction: column; gap: 4px; }
+        .download-btn { display: block; color: var(--primary); font-size: 0.7rem; text-decoration: none; font-weight: bold; border: 1px solid var(--primary); border-radius: 4px; padding: 4px; cursor: pointer; }
+        .whatsapp-btn { display: block; color: white; background: var(--whatsapp); font-size: 0.7rem; text-decoration: none; font-weight: bold; border-radius: 4px; padding: 4px; cursor: pointer; }
+
+        .select-order { width: 100%; font-size: 0.7rem; padding: 5px; margin-top: 5px; cursor: pointer; border-radius: 5px; border: 1px solid var(--primary); background: #fff; color: var(--primary); font-weight: bold; }
+        .select-order.selected { background: var(--success); color: #fff; border-color: var(--success); }
+        .admin-info { text-align: center; margin-top: 20px; font-weight: bold; color: var(--primary); font-size: 0.9rem; border-top: 1px dashed #ccc; padding-top: 10px; }
+        .btn-commander-final { position: sticky; bottom: 0; background: var(--success); z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+
+        #zoomOverlay, #cropModal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:1000; justify-content:center; align-items:center; flex-direction: column; }
+        #zoomImg { max-width: 95%; max-height: 80%; border: 2px solid var(--gold); }
+        .crop-container { width: 90%; max-width: 380px; background: white; padding: 15px; border-radius: 15px; color: #333; }
+        .close-zoom { color: white; margin-top: 20px; border: 1px solid white; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="profile-trigger" id="profileTrigger" onclick="toggleSideMenu(true)">
+        <div></div><div></div><div></div>
+    </div>
+
+    <div class="corner-logo"></div>
+    <button class="back-btn" id="btnRetour" onclick="goBack()">←</button>
+
+    <div class="overlay-menu" id="menuOverlay" onclick="toggleSideMenu(false)"></div>
+    <div class="side-menu" id="sideMenu">
+        <h3 style="color: var(--primary); border-bottom: 2px solid var(--gold); margin-top: 0;">MON COMPTE</h3>
+        <div style="position: relative; width: 110px; height: 110px; margin: 25px auto;">
+            <div id="sidePhotoCircle" style="width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--gold); overflow: hidden; background: #eee;">
+                <img id="imgMenuProfil" style="width:100%; height:100%; object-fit:cover;">
+            </div>
+            <div class="edit-badge" onclick="show(3); toggleSideMenu(false);">✏️</div>
+        </div>
+        <div id="sideDetails" style="text-align: center; margin-bottom: 30px;">
+            <div id="sideNom" style="font-weight: bold; color: var(--primary); font-size: 1.1rem; text-transform: uppercase;"></div>
+            <div id="sideTel" style="color: #666; font-size: 0.9rem;"></div>
+        </div>
+        <button onclick="voirMesAbonnes()" style="background: var(--whatsapp);">MES ABONNÉS (WhatsApp)</button>
+        <button onclick="location.reload()" style="background: #e74c3c; margin-top: 15px;">DÉCONNEXION</button>
+    </div>
+
+    <div id="t1" class="screen active">
+        <h2>HK DESIGN</h2>
+        <input type="text" id="logUser" placeholder="Numéro (+243...)">
+        <input type="password" id="logPass" placeholder="Mot de passe">
+        <div id="msg1" class="msg"></div>
+        <button onclick="validerT1()">SE CONNECTER</button>
+        <p onclick="oublie()" style="text-align:right; font-size:0.8rem; cursor:pointer; color: var(--primary);">Mot de passe oublié ?</p>
+        <hr>
+        <button onclick="show(2)" style="background:#555">CRÉER UN COMPTE</button>
+    </div>
+
+    <div id="t2" class="screen">
+        <h2>INSCRIPTION</h2>
+        <button onclick="document.getElementById('subT2').style.display='block'">CRÉER UN COMPTE ▼</button>
+        <div id="subT2" style="display:none; margin-top:10px; border:1px solid #ddd; padding:10px; background: #f9f9f9; border-radius: 10px;">
+            <p onclick="show(3)" style="cursor:pointer; padding:10px; border-bottom: 1px solid #eee;">👤 Usage Personnel</p>
+            <p onclick="show(3)" style="cursor:pointer; padding:10px;">🏢 Entreprise</p>
+        </div>
+    </div>
+
+    <div id="t3" class="screen">
+        <h2>MES INFORMATIONS</h2>
+        <input type="text" id="nom" placeholder="Nom">
+        <input type="text" id="postnom" placeholder="Post-nom">
+        <input type="text" id="prenom" placeholder="Prénom">
+        <select id="sexe"><option value="">Sexe</option><option>M</option><option>F</option></select>
+        <input type="number" id="age" placeholder="Âge (Min 18)">
+        <input type="text" id="tel" placeholder="Numéro +243...">
+        <div id="msg3" class="msg red"></div>
+        <button onclick="validerT3()">CRÉER / MODIFIER</button>
+    </div>
+
+    <div id="t4" class="screen">
+        <h2>SÉCURITÉ</h2>
+        <input type="password" id="p1" placeholder="Nouveau mot de passe (8 chiffres)">
+        <input type="password" id="p2" placeholder="Confirmer le mot de passe">
+        <div id="msg4" class="msg red"></div>
+        <button onclick="validerT4()">VALIDER</button>
+    </div>
+
+    <div id="t5" class="screen">
+        <h2>COMPTE PRÊT</h2>
+        <div id="recap" style="background:#f04ff; padding:15px; border-radius:10px; border-left: 5px solid var(--primary);"></div>
+        <div style="text-align:center; margin-top: 20px;">
+            <div id="photoView" style="width:120px; height:120px; border:2px dashed #ccc; border-radius:50%; margin: 0 auto; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#eee;">Photo</div>
+            <p><span onclick="document.getElementById('file').click()" style="color:blue; cursor:pointer; font-weight:bold;">Ajouter</span> | <span onclick="finaliserEtSauvegarder()" style="color:#999; cursor:pointer;">Ignorer</span></p>
+        </div>
+        <input type="file" id="file" hidden accept="image/*" onchange="initCrop(this)">
+        <button onclick="finaliserEtSauvegarder()" id="btnSuiv5" style="display:none">SUIVANT</button>
+    </div>
+
+    <div id="t6" class="screen">
+        <div id="userProfileHeader" style="display: flex; align-items: center; gap: 15px; background: #f9f9f9; padding: 15px; border-radius: 15px; margin-top: 20px; border: 1px solid #eee;">
+            <div id="finalPhotoCircle" style="width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--gold); overflow: hidden; background: #ddd;">
+                <img id="imgProfilFinal" style="width:100%; height:100%; object-fit:cover; display:none;">
+            </div>
+            <div style="text-align: left;">
+                <div id="finalNom" style="font-weight: bold; color: var(--primary); text-transform: uppercase; font-size: 1rem;"></div>
+                <div id="finalTel" style="font-size: 0.85rem; color: #666;"></div>
+            </div>
+        </div>
+        <div style="text-align: center; font-weight: bold; font-size: 1.2rem; margin-top: 40px;">BIENVENUE CHEZ<br><span style="color:var(--gold)">HK DESIGN</span></div>
+        <button onclick="show(7)" style="margin-top:50px;">DÉCOUVRIR MES SERVICES</button>
+    </div>
+
+    <div id="t7" class="screen">
+        <h2>NOS SERVICES</h2>
+        <div id="servList"></div>
+        <button onclick="show(8)" style="margin-top:20px;">SUIVANT</button>
+    </div>
+
+    <div id="t8" class="screen">
+        <div id="aboBox" style="background: #fff8e1; border: 2px dashed var(--gold); padding:15px; text-align:center; border-radius: 10px;">
+            <p style="font-weight:bold;">ABONNEZ-VOUS ET RECEVEZ -30%</p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="statutAbo(true)" style="background:var(--success)">S'abonner</button>
+                <button onclick="statutAbo(false)" style="background:var(--error)">Ignorer</button>
+            </div>
+        </div>
+        <div id="msg8" class="msg" style="margin:15px 0; font-size: 1rem;"></div>
+        
+        <div id="portfolio" style="display:none;">
+            <h3 style="text-align:center; color: var(--primary);">CATALOGUE HK DESIGN</h3>
+            <div class="portfolio-grid" id="mainPortfolioGrid">
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/8crtJMsb/8c7edbe923dd48b6b9bb24ce33d78ea3.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 1')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/8crtJMsb/8c7edbe923dd48b6b9bb24ce33d78ea3.jpg', 'HK_1')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/8crtJMsb/8c7edbe923dd48b6b9bb24ce33d78ea3.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/cHCDWVWy/20260127_132413.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 2')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/cHCDWVWy/20260127_132413.jpg', 'HK_2')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/cHCDWVWy/20260127_132413.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/Tw1kxZ6c/20260127_091027.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 3')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/Tw1kxZ6c/20260127_091027.jpg', 'HK_3')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/Tw1kxZ6c/20260127_091027.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/26t0S2jY/20251204_165022.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 4')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/26t0S2jY/20251204_165022.jpg', 'HK_4')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/26t0S2jY/20251204_165022.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/qRF1vjJY/20260108_132321.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 5')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/qRF1vjJY/20260108_132321.jpg', 'HK_5')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/qRF1vjJY/20260108_132321.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/RhnX6KqH/20251204_165754.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 6')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/RhnX6KqH/20251204_165754.jpg', 'HK_6')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/RhnX6KqH/20251204_165754.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/Kck2rWMH/20251122_113645.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 7')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/Kck2rWMH/20251122_113645.jpg', 'HK_7')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/Kck2rWMH/20251122_113645.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/4N6HWCK5/UPAKO.png" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 8')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/4N6HWCK5/UPAKO.png', 'HK_8')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/4N6HWCK5/UPAKO.png')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/dt2Z5M7S/20250930_154911.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 9')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/dt2Z5M7S/20250930_154911.jpg', 'HK_9')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/dt2Z5M7S/20250930_154911.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/Nf62dhyJ/20250506_143941_(1).jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 10')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/Nf62dhyJ/20250506_143941_(1).jpg', 'HK_10')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/Nf62dhyJ/20250506_143941_(1).jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/8zTJ3yMD/20250315_132542.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 11')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/8zTJ3yMD/20250315_132542.jpg', 'HK_11')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/8zTJ3yMD/20250315_132542.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/K8mkV9Bb/20240925_232409.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 12')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/K8mkV9Bb/20240925_232409.jpg', 'HK_12')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/K8mkV9Bb/20240925_232409.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/8zTJ3yMJ/20240522_104538.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 13')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/8zTJ3yMJ/20240522_104538.jpg', 'HK_13')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/8zTJ3yMJ/20240522_104538.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/Qdj9P617/1742551710926_100.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 14')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/Qdj9P617/1742551710926_100.jpg', 'HK_14')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/Qdj9P617/1742551710926_100.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/Z5JBgfpd/1742068055225_100.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 15')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/Z5JBgfpd/1742068055225_100.jpg', 'HK_15')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/Z5JBgfpd/1742068055225_100.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/yNz9VVwb/20260201_201242.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 16')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/yNz9VVwb/20260201_201242.jpg', 'HK_16')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/yNz9VVwb/20260201_201242.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/5tMvxxZ7/20260201_141615.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 17')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/5tMvxxZ7/20260201_141615.jpg', 'HK_17')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/5tMvxxZ7/20260201_141615.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/RFZWFqXz/20260201_013613.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 18')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/RFZWFqXz/20260201_013613.jpg', 'HK_18')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/RFZWFqXz/20260201_013613.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/Gp1YccWd/20251022_095245.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 19')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/Gp1YccWd/20251022_095245.jpg', 'HK_19')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/Gp1YccWd/20251022_095245.jpg')">💬 Partager</span></div></div>
+                <div class="portfolio-item-box"><img src="https://i.postimg.cc/BZkJr30D/20260127_132413.jpg" class="portfolio-img" onclick="zoom(this.src)"><button class="select-order" onclick="toggleSelect(this, 'Design 20')">Choisir cette affiche</button><div class="action-btns"><span class="download-btn" onclick="downloadImg('https://i.postimg.cc/BZkJr30D/20260127_132413.jpg', 'HK_20')">📥 Télécharger</span><span class="whatsapp-btn" onclick="shareWA('https://i.postimg.cc/BZkJr30D/20260127_132413.jpg')">💬 Partager</span></div></div>
+            </div>
+            <button id="btnCommande" class="btn-commander-final" onclick="passerCommande()" style="display:none;">ENVOYER MA COMMANDE (0)</button>
+            <div class="admin-info">contact administrateur:+243977089388</div>
+        </div>
+    </div>
+</div>
+
+<div id="cropModal">
+    <div class="crop-container">
+        <h3 style="text-align:center; margin-top:0;">Ajuster la photo</h3>
+        <div style="height: 300px; background: #000;">
+            <img id="imageToCrop" style="max-width: 100%;">
+        </div>
+        <button onclick="saveCrop()" style="background: var(--success);">VALIDER LE ROGNAGE</button>
+        <button onclick="closeCrop()" style="background: var(--error); margin-top:5px;">ANNULER</button>
+    </div>
+</div>
+
+<div id="zoomOverlay">
+    <img id="zoomImg">
+    <div class="close-zoom" onclick="document.getElementById('zoomOverlay').style.display='none'">FERMER LE ZOOM</div>
+</div>
+
+<script>
+    const prefixes = ['97','96','90','98','99','80','81','82','83','84','85','86','91'];
+    let pageHistory = [];
+    let cropper;
+    let selectedDesigns = [];
+    let currentUserData = null;
+
+    function toggleSideMenu(open) {
+        const menu = document.getElementById('sideMenu');
+        const overlay = document.getElementById('menuOverlay');
+        if(open) {
+            menu.classList.add('open');
+            overlay.style.display = 'block';
+            // Remplir les données du menu
+            document.getElementById('sideNom').innerText = currentUserData.pr + " " + currentUserData.n;
+            document.getElementById('sideTel').innerText = currentUserData.t;
+            if(currentUserData.photo) document.getElementById('imgMenuProfil').src = currentUserData.photo;
+        } else {
+            menu.classList.remove('open');
+            overlay.style.display = 'none';
+        }
+    }
+
+    function voirMesAbonnes() {
+        const msg = encodeURIComponent("Bonjour HK DESIGN, je suis " + currentUserData.pr + ". Je souhaite voir mes abonnés ou mon statut d'abonnement.");
+        window.open(`https://wa.me/243977089388?text=${msg}`, '_blank');
+    }
+
+    function finaliserEtSauvegarder() {
+        document.getElementById('finalNom').innerText = currentUserData.pr + " " + currentUserData.n;
+        document.getElementById('finalTel').innerText = currentUserData.t;
+        
+        if(currentUserData.photo) {
+            const img = document.getElementById('imgProfilFinal');
+            img.src = currentUserData.photo;
+            img.style.display = "block";
+        }
+
+        localStorage.setItem("hk_user_" + currentUserData.t, JSON.stringify(currentUserData));
+        localStorage.setItem("hk_active_session", currentUserData.t);
+        show(6);
+    }
+
+    function validerT1() {
+        const u = document.getElementById('logUser').value;
+        const p = document.getElementById('logPass').value;
+        const m = document.getElementById('msg1');
+        const savedData = localStorage.getItem("hk_user_" + u);
+
+        if (savedData) {
+            const user = JSON.parse(savedData);
+            if (user.pass === p) {
+                currentUserData = user;
+                finaliserEtSauvegarder();
+            } else {
+                m.className="msg red"; m.innerText = "Mot de passe incorrect";
+            }
+        } else {
+            m.className="msg red"; m.innerText = (u.startsWith('+243')) ? "Compte HK inexistant" : "Utilisateur non reconnu";
+        }
+    }
+
+    function show(id) {
+        const currentScreen = document.querySelector('.screen.active');
+        if (currentScreen) {
+            const currentId = parseInt(currentScreen.id.replace('t', ''));
+            if (pageHistory[pageHistory.length - 1] !== currentId) pageHistory.push(currentId);
+        }
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('t'+id).classList.add('active');
+        
+        // Gérer visibilité bouton retour et menu 3 traits
+        document.getElementById('btnRetour').style.display = (id === 1) ? 'none' : 'flex';
+        // Afficher les 3 traits seulement si connecté (écrans 6, 7, 8)
+        document.getElementById('profileTrigger').style.display = (id >= 6) ? 'flex' : 'none';
+
+        // Si on retourne sur T3 pour éditer, pré-remplir
+        if(id === 3 && currentUserData) {
+            document.getElementById('nom').value = currentUserData.n || "";
+            document.getElementById('postnom').value = currentUserData.p || "";
+            document.getElementById('prenom').value = currentUserData.pr || "";
+            document.getElementById('age').value = currentUserData.a || "";
+            document.getElementById('tel').value = currentUserData.t || "";
+        }
+    }
+
+    function goBack() {
+        if (pageHistory.length > 0) {
+            const prevId = pageHistory.pop();
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('t'+prevId).classList.add('active');
+            if (prevId === 1) document.getElementById('btnRetour').style.display = 'none';
+            document.getElementById('profileTrigger').style.display = (prevId >= 6) ? 'flex' : 'none';
+        }
+    }
+
+    function initCrop(input) {
+        if (input.files && input.files[0]) {
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('imageToCrop');
+                img.src = e.target.result;
+                document.getElementById('cropModal').style.display = 'flex';
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(img, { aspectRatio: 1, viewMode: 1, guides: false });
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function saveCrop() {
+        const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
+        const croppedImg = canvas.toDataURL();
+        document.getElementById('photoView').innerHTML = `<img src="${croppedImg}" style="width:100%; height:100%; object-fit:cover;">`;
+        currentUserData.photo = croppedImg;
+        document.getElementById('btnSuiv5').style.display = "block";
+        closeCrop();
+    }
+
+    function closeCrop() {
+        document.getElementById('cropModal').style.display = 'none';
+        if (cropper) cropper.destroy();
+    }
+
+    function validerT3() {
+        const d = {
+            n: document.getElementById('nom').value, p: document.getElementById('postnom').value,
+            pr: document.getElementById('prenom').value, a: parseInt(document.getElementById('age').value),
+            t: document.getElementById('tel').value
+        };
+        const msg = document.getElementById('msg3');
+        if(!d.n || !d.p || !d.pr || !d.a || !d.t) { msg.innerText = "Veuillez remplir tous les formulaires"; return; }
+        if(d.a < 18) { msg.innerText = "Âge inférieur à 18"; return; }
+        if(!d.t.startsWith('+243') || d.t.length !== 13 || !prefixes.includes(d.t.substring(4, 6))) { msg.innerText = "Numéro non reconnu"; return; }
+        
+        // Conserver les anciennes infos (photo/pass) si édition
+        if(currentUserData) {
+            currentUserData = {...currentUserData, ...d};
+        } else {
+            currentUserData = d;
+        }
+
+        document.getElementById('recap').innerHTML = `<b>Propriétaire:</b> ${d.pr} ${d.n}<br><b>Contact HK:</b> ${d.t}`;
+        show(4);
+    }
+
+    function validerT4() {
+        const p1 = document.getElementById('p1').value, p2 = document.getElementById('p2').value;
+        if(p1 !== p2 || p1.length < 8) { document.getElementById('msg4').innerText = "Erreur (8 chiffres min)"; }
+        else { currentUserData.pass = p1; show(5); }
+    }
+
+    function toggleSelect(btn, name) {
+        btn.classList.toggle('selected');
+        if(btn.classList.contains('selected')) {
+            selectedDesigns.push(name);
+            btn.innerText = "SÉLECTIONNÉ ✅";
+        } else {
+            selectedDesigns = selectedDesigns.filter(i => i !== name);
+            btn.innerText = "Choisir cette affiche";
+        }
+        updateOrderButton();
+    }
+
+    function updateOrderButton() {
+        const btn = document.getElementById('btnCommande');
+        btn.style.display = selectedDesigns.length > 0 ? "block" : "none";
+        btn.innerText = `ENVOYER MA COMMANDE (${selectedDesigns.length})`;
+    }
+
+    function passerCommande() {
+        let detailsArticles = "";
+        document.querySelectorAll('.select-order.selected').forEach(btn => {
+            const container = btn.parentElement;
+            const imgUrl = container.querySelector('.portfolio-img').src;
+            const designName = btn.getAttribute('onclick').match(/'([^']+)'/)[1];
+            detailsArticles += `- *${designName}* : ${imgUrl}\n`;
+        });
+        const msg = encodeURIComponent(`*NOUVELLE COMMANDE HK DESIGN*\n\n👤 *Client* : ${currentUserData.pr} ${currentUserData.n}\n📞 *Contact* : ${currentUserData.t}\n\n🖼️ *Articles* :\n${detailsArticles}`);
+        window.open(`https://wa.me/243977089388?text=${msg}`, '_blank');
+        alert("Commande prête pour l'envoi WhatsApp !");
+    }
+
+    function zoom(src) {
+        document.getElementById('zoomImg').src = src;
+        document.getElementById('zoomOverlay').style.display = 'flex';
+    }
+
+    const services = ["Logo Design", "Carte de visite", "Flyer Design", "Montage Vidéo", "Affiche Église", "Spot Publicitaire"];
+    services.forEach(s => {
+        document.getElementById('servList').innerHTML += `<div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid #eee">${s} <input type="checkbox"></div>`;
+    });
+
+    function statutAbo(val) {
+        document.getElementById('portfolio').style.display = "block";
+        document.getElementById('aboBox').style.display = "none";
+        if(val) {
+            document.getElementById('msg8').innerHTML = "<span style='color:green'>✅ Abonné HK Design</span>";
+            const msgAbo = encodeURIComponent(`*NOUVEL ABONNEMENT HK DESIGN*\n\nJe viens de m'abonner pour profiter des -30% !\n\n👤 Client : ${currentUserData.pr} ${currentUserData.n}\n📞 Contact : ${currentUserData.t}`);
+            alert("Merci pour votre abonnement ! Cliquez sur OK pour valider votre statut auprès de l'administrateur.");
+            window.open(`https://wa.me/243977089388?text=${msgAbo}`, '_blank');
+        }
+    }
+
+    function downloadImg(url, name) {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = name + ".jpg";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function shareWA(imgUrl) {
+        const text = encodeURIComponent("Regarde ce magnifique design réalisé par HK DESIGN ! 🔥\nLien : " + imgUrl);
+        window.open(`https://wa.me/?text=${text}`, '_blank');
+    }
+</script>
+</body>
+</html>
